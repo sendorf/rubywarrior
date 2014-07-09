@@ -36,16 +36,17 @@ class Player
       # Attacks enemies once there are no ticking captives
       elsif enemy
         warrior.attack!(enemy)
+      # Heals himself after a battle
+      elsif warrior.health < 16
+        warrior.rest!
       # He recues a captive
       elsif captive
         warrior.rescue!(captive)
-      # Heals himself after a battle
-      elsif warrior.health < 14
-        warrior.rest!
       # Move to the objective
       else
         warrior.walk!(warrior.direction_of(objective))
       end
+
     # If he is healthy he goes to the stairs to finish the level
     else
       warrior.walk!(warrior.direction_of_stairs)
@@ -58,7 +59,12 @@ class Player
       warrior.bind!(:right)
     elsif warrior.feel(:left).enemy?
       warrior.bind!(:left)
+    elsif warrior.feel(:backward).enemy?
+      warrior.bind!(:backward)
+    elsif warrior.feel(:forward).enemy?
+      warrior.bind!(:forward)
     end
+
   end
 
   def check_if_detonable(warrior, objective)
@@ -150,6 +156,8 @@ class Player
     objective = warrior.listen.first
     warrior.listen.each do |space|
       if space.ticking?
+        objective = space
+      elsif space.captive?
         objective = space
       end
     end
