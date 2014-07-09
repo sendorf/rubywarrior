@@ -19,15 +19,19 @@ class Player
       # Avoids occupied spaces
       elsif objective.ticking?
         # If detonable he detonates until he is near death
-        if check_if_detonable(warrior, objective) && warrior.health > 6
+        if check_if_detonable(warrior, objective) && warrior.health > 5
           warrior.detonate!(warrior.direction_of(objective))
         # Checks if the ticking objective is reachable
         elsif warrior.feel(warrior.direction_of(objective)).ticking?
           warrior.rescue!(warrior.direction_of(objective))
+        # Check if there is any way free to get to the ticking captive without going back
+        elsif feel_empty(warrior) && feel_empty(warrior) != :backward
+          warrior.walk!(feel_empty(warrior))
         # Attacks enemies
         elsif enemy
           warrior.attack!(enemy)
-        elsif warrior.health < 10
+        # Heals after combat 
+        elsif warrior.health < 12
           warrior.rest!
         # Goes to the tiking objective
         else
@@ -157,6 +161,7 @@ class Player
     warrior.listen.each do |space|
       if space.ticking?
         objective = space
+        break
       elsif space.captive?
         objective = space
       end
