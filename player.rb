@@ -18,8 +18,11 @@ class Player
         warrior.bind!(enemy)
       # Avoids occupied spaces
       elsif objective.ticking?
+        # If detonable he detonates until he is near death
+        if check_if_detonable(warrior, objective) && warrior.health > 4
+          warrior.detonate!(warrior.direction_of(objective))
         # Checks if the ticking objective is reachable
-        if warrior.feel(warrior.direction_of(objective)).captive?
+        elsif warrior.feel(warrior.direction_of(objective)).captive?
           warrior.rescue!(warrior.direction_of(objective))
         elsif warrior.feel(warrior.direction_of(objective)).enemy?
           warrior.attack!(warrior.direction_of(objective))
@@ -44,6 +47,23 @@ class Player
     else
       warrior.walk!(warrior.direction_of_stairs)
     end
+  end
+
+  def check_if_detonable(warrior, objective)
+    count = 0
+    detonable = false
+    look = warrior.look(warrior.direction_of(objective))
+    # Counts the enemies he can see with the look
+    look.each do |space|
+      if space.enemy?
+        count = count +1
+      end
+    end
+    # Checks if the first space is free so he can hit both objectives with the explosion
+    if count == 2 && !look.first.empty?
+      detonable = true
+    end
+    return detonable
   end
 
   def feel_enemy(warrior)
