@@ -15,29 +15,32 @@ class Player
         warrior.walk!(feel_no_stairs(warrior))
       # If there is an enemy the warrior attacks him
       elsif enemies > 1
-        warrior.bind!(enemy)
+        bind_enemies(warrior)
       # Avoids occupied spaces
       elsif objective.ticking?
         # If detonable he detonates until he is near death
-        if check_if_detonable(warrior, objective) && warrior.health > 4
+        if check_if_detonable(warrior, objective) && warrior.health > 6
           warrior.detonate!(warrior.direction_of(objective))
         # Checks if the ticking objective is reachable
-        elsif warrior.feel(warrior.direction_of(objective)).captive?
+        elsif warrior.feel(warrior.direction_of(objective)).ticking?
           warrior.rescue!(warrior.direction_of(objective))
-        elsif warrior.feel(warrior.direction_of(objective)).enemy?
-          warrior.attack!(warrior.direction_of(objective))
+        # Attacks enemies
+        elsif enemy
+          warrior.attack!(enemy)
+        elsif warrior.health < 10
+          warrior.rest!
         # Goes to the tiking objective
         else
-          warrior.walk!(warrior.direction_of(objective))
+          warrior.walk!(:forward)
         end
-      # He recues a captive
-      elsif captive
-        warrior.rescue!(captive)
       # Attacks enemies once there are no ticking captives
       elsif enemy
         warrior.attack!(enemy)
+      # He recues a captive
+      elsif captive
+        warrior.rescue!(captive)
       # Heals himself after a battle
-      elsif warrior.health < 20
+      elsif warrior.health < 14
         warrior.rest!
       # Move to the objective
       else
@@ -46,6 +49,15 @@ class Player
     # If he is healthy he goes to the stairs to finish the level
     else
       warrior.walk!(warrior.direction_of_stairs)
+    end
+  end
+
+  # Binds left and right enemies
+  def bind_enemies(warrior)
+    if warrior.feel(:right).enemy?
+      warrior.bind!(:right)
+    elsif warrior.feel(:left).enemy?
+      warrior.bind!(:left)
     end
   end
 
@@ -60,7 +72,7 @@ class Player
       end
     end
     # Checks if the first space is free so he can hit both objectives with the explosion
-    if count == 2 && !look.first.empty?
+    if count >= 2 && !look.first.empty?
       detonable = true
     end
     return detonable
@@ -69,14 +81,14 @@ class Player
   def feel_enemy(warrior)
     # Checks if there is an enemy and where it is to attack it
     enemy = false;
-    if warrior.feel(:left).enemy?
-      enemy = :left;
-    elsif warrior.feel(:right).enemy?
-      enemy = :right;
-    elsif warrior.feel(:backward).enemy?
+    if warrior.feel(:backward).enemy?
       enemy = :backward;
     elsif warrior.feel(:forward).enemy?
       enemy = :forward;
+    elsif warrior.feel(:left).enemy?
+      enemy = :left;
+    elsif warrior.feel(:right).enemy?
+      enemy = :right;
     end
   end
 
