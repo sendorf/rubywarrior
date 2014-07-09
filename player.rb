@@ -22,7 +22,12 @@ class Player
       warrior.rescue!(captive)
     # If healthy and still there are units to listen
     elsif objective
-      warrior.walk!(warrior.direction_of(objective))
+      # If there are units avoids moving to the stairs until he has interacted with them
+      if warrior.feel(warrior.direction_of(objective)).stairs?
+        warrior.walk!(feel_no_stairs(warrior))
+      else
+        warrior.walk!(warrior.direction_of(objective))
+      end
     # If he is healthy he goes to the stairs to finish the level
     else
       warrior.walk!(warrior.direction_of_stairs)
@@ -40,6 +45,20 @@ class Player
       enemy = :left;
     elsif warrior.feel(:right).enemy?
       enemy = :right;
+    end
+  end
+
+  def feel_no_stairs(warrior)
+    # Checks if the warrior is not moving to the stairs to soon
+    empty = false;
+    if !warrior.feel(:forward).stairs?
+      empty = :forward;
+    elsif !warrior.feel(:left).stairs?
+      empty = :left;
+    elsif !warrior.feel(:right).stairs?
+      empty = :right;
+    elsif !warrior.feel(:backward).stairs?
+      empty = :backward;
     end
   end
 
