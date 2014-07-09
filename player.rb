@@ -8,33 +8,35 @@ class Player
     enemies = count_enemies(warrior)
     # Listen to sorrounding spaces and selects according to priority
     objective = objective_priority(warrior)
-    # If there is an enemy the warrior attacks him
-    if enemies > 1
-      warrior.bind!(enemy)
-    # He recues a captive
-    elsif captive
-      warrior.rescue!(captive)
     # If healthy and still there are units to listen
-    elsif objective
+    if objective
       # If there are units avoids moving to the stairs until he has interacted with them
       if warrior.feel(warrior.direction_of(objective)).stairs?
         warrior.walk!(feel_no_stairs(warrior))
+      # If there is an enemy the warrior attacks him
+      elsif enemies > 1
+        warrior.bind!(enemy)
       # Avoids occupied spaces
       elsif objective.ticking?
         # Checks if the ticking objective is reachable
-        if !warrior.feel(warrior.direction_of(objective)).empty?
-          warrior.walk!(feel_empty(warrior))
+        if warrior.feel(warrior.direction_of(objective)).captive?
+          warrior.rescue!(warrior.direction_of(objective))
+        elsif warrior.feel(warrior.direction_of(objective)).enemy?
+          warrior.attack!(warrior.direction_of(objective))
         # Goes to the tiking objective
         else
           warrior.walk!(warrior.direction_of(objective))
         end
+      # He recues a captive
+      elsif captive
+        warrior.rescue!(captive)
       # Attacks enemies once there are no ticking captives
       elsif enemy
         warrior.attack!(enemy)
       # Heals himself after a battle
       elsif warrior.health < 20
         warrior.rest!
-      # Ignores enemies if there are ticking captives
+      # Move to the objective
       else
         warrior.walk!(warrior.direction_of(objective))
       end
@@ -47,14 +49,14 @@ class Player
   def feel_enemy(warrior)
     # Checks if there is an enemy and where it is to attack it
     enemy = false;
-    if warrior.feel(:forward).enemy?
-      enemy = :forward;
-    elsif warrior.feel(:left).enemy?
+    if warrior.feel(:left).enemy?
       enemy = :left;
     elsif warrior.feel(:right).enemy?
       enemy = :right;
     elsif warrior.feel(:backward).enemy?
       enemy = :backward;
+    elsif warrior.feel(:forward).enemy?
+      enemy = :forward;
     end
   end
 
@@ -100,14 +102,14 @@ class Player
   def feel_captive(warrior)
     # Checks if there is an captive and where it is to attack it
     captive = false;
-    if warrior.feel(:forward).captive?
-      captive = :forward;
-    elsif warrior.feel(:backward).captive?
-      captive = :backward;
-    elsif warrior.feel(:left).captive?
+    if warrior.feel(:left).captive?
       captive = :left;
     elsif warrior.feel(:right).captive?
       captive = :right;
+    elsif warrior.feel(:forward).captive?
+      captive = :forward;
+    elsif warrior.feel(:backward).captive?
+      captive = :backward;
     end
   end
 
