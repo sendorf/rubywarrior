@@ -6,6 +6,8 @@ class Player
     captive = feel_captive(warrior)
     # Counts the number of enemies
     enemies = count_enemies(warrior)
+    # Listen to sorrounding spaces and selects the first one
+    objective = warrior.listen.first
     # If there is an enemy the warrior attacks him
     if enemies > 1
       warrior.bind!(enemy)
@@ -18,6 +20,9 @@ class Player
     # If he is healthy he recues a captive
     elsif captive
       warrior.rescue!(captive)
+    # If healthy and still there are units to listen
+    elsif objective
+      warrior.walk!(warrior.direction_of(objective))
     # If he is healthy he goes to the stairs to finish the level
     else
       warrior.walk!(warrior.direction_of_stairs)
@@ -40,6 +45,7 @@ class Player
 
   def count_enemies(warrior)
     count = 0
+    # Counts the surronding enemies
     [:forward, :backward, :left, :right].each do |direction|
       if warrior.feel(direction).enemy?
         count = count +1;
